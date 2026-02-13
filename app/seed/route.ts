@@ -1,8 +1,23 @@
-import bcrypt from 'bcrypt';
-import postgres from 'postgres';
-import { invoices, customers, revenue, users } from '../lib/placeholder-data';
+import bcrypt from "bcrypt";
+import postgres from "postgres";
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+
+async function fetchUsers() {
+  return await sql`SELECT * FROM users;`;
+}
+
+async function fetchInvoices() {
+  return await sql`SELECT * FROM invoices;`;
+}
+
+async function fetchCustomers() {
+  return await sql`SELECT * FROM customers;`;
+}
+
+async function fetchRevenue() {
+  return await sql`SELECT * FROM revenue;`;
+}
 
 async function seedUsers() {
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
@@ -14,7 +29,7 @@ async function seedUsers() {
       password TEXT NOT NULL
     );
   `;
-
+  const users = await fetchUsers();
   const insertedUsers = await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -42,6 +57,7 @@ async function seedInvoices() {
     );
   `;
 
+  const invoices = await fetchInvoices();
   const insertedInvoices = await Promise.all(
     invoices.map(
       (invoice) => sql`
@@ -67,6 +83,7 @@ async function seedCustomers() {
     );
   `;
 
+  const customers = await fetchCustomers();
   const insertedCustomers = await Promise.all(
     customers.map(
       (customer) => sql`
@@ -87,7 +104,7 @@ async function seedRevenue() {
       revenue INT NOT NULL
     );
   `;
-
+  const revenue = await fetchRevenue();
   const insertedRevenue = await Promise.all(
     revenue.map(
       (rev) => sql`
@@ -110,7 +127,7 @@ export async function GET() {
       seedRevenue(),
     ]);
 
-    return Response.json({ message: 'Database seeded successfully' });
+    return Response.json({ message: "Database seeded successfully" });
   } catch (error) {
     return Response.json({ error }, { status: 500 });
   }
